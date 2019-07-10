@@ -12,13 +12,14 @@ def encode_onehot(labels):
     return labels_onehot
 
 
-def load_data(path="../data/cora/", dataset="cora"):
+def load_data(path="./data/cora/", dataset="cora"):
     """Load citation network dataset (cora only for now)"""
     print('Loading {} dataset...'.format(dataset))
-
+    # import os
+    # print(os.getcwd())
     idx_features_labels = np.genfromtxt("{}{}.content".format(path, dataset),
                                         dtype=np.dtype(str))
-    features = sp.csr_matrix(idx_features_labels[:, 1:-1], dtype=np.float32)
+    features = sp.csr_matrix(idx_features_labels[:, 1:-1], dtype=np.float32) # 2708*1433
     labels = encode_onehot(idx_features_labels[:, -1])
 
     # build graph
@@ -31,8 +32,8 @@ def load_data(path="../data/cora/", dataset="cora"):
     adj = sp.coo_matrix((np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])),
                         shape=(labels.shape[0], labels.shape[0]),
                         dtype=np.float32)
-
-    # build symmetric adjacency matrix
+    dd = adj.T > adj
+    # build symmetric adjacency matrix. For two direction.
     adj = adj + adj.T.multiply(adj.T > adj) - adj.multiply(adj.T > adj)
 
     features = normalize(features)
@@ -42,7 +43,7 @@ def load_data(path="../data/cora/", dataset="cora"):
     idx_val = range(200, 500)
     idx_test = range(500, 1500)
 
-    features = torch.FloatTensor(np.array(features.todense()))
+    features = torch.FloatTensor(np.array(features.todense())) #todense returns a matrix. 
     labels = torch.LongTensor(np.where(labels)[1])
     adj = sparse_mx_to_torch_sparse_tensor(adj)
 
